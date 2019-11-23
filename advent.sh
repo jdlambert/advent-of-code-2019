@@ -6,8 +6,11 @@ then
   exit 1
 fi
 
+RED="\e[31m"
+GREEN="\e[32m"
+
 echo "DAY $1"
 
 cd $(printf "%02d" $1)
-[ -f rust.rs ] && printf "\e[31m\nRUST:\n" && rustc rust.rs && (./rust; rm rust)
-[ -f clojure.clj ] && printf "\e[32m\nCLOJURE:\n" && clojure clojure.clj
+[ -f rust.rs ] && printf "$RED\nRUST:\n" && rustc rust.rs && (./rust; rm rust)
+[ -f clojure.clj ] && printf "$GREEN\nCLOJURE:\n" && clojure clojure.clj
