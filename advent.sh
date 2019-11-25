@@ -11,6 +11,6 @@ GREEN="\e[32m"
 
 echo "DAY $1"
 
-cd $(printf "%02d" $1)
-[ -f rust.rs ] && printf "$RED\nRUST:\n" && rustc rust.rs && (./rust; rm rust)
-[ -f clojure.clj ] && printf "$GREEN\nCLOJURE:\n" && clojure clojure.clj
+cd $(printf "day%02d" $1)
+[ -f Cargo.toml ] && printf "$RED\nRUST:\n" && cargo fmt && cargo run --quiet
+[ -f project.clj ] && printf "$GREEN\nCLOJURE:\n" && lein run
