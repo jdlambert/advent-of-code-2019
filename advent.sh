@@ -1,23 +1,35 @@
 #!/usr/bin/env bash
 
-if [ $# -eq 0 ]
-then
-  echo "Usage: ./advent.sh day [-f]"
+function print_usage() {
+  echo "Usage: ./advent.sh day [-f/-r]"
   echo "-f: creates the folder for the given day from a template"
+  echo "-r: starts a Leiningen REPL with the given week's namespace"
   exit 1
-fi
+}
+
+[[ $# -eq 0 ]] && print_usage
 
 echo "🦀 DAY $1 🎄"
 DIR=$(printf "day%02d" $1)
 
-if [[ $# -gt 1 && "$2" == "-f" ]]; then
-  [ -d $DIR ] && echo "Directory already exists!" && exit 1
-  cp -r template $DIR
-  mv $DIR/src/template $DIR/src/$DIR
-  grep -rlI "template" $DIR | xargs sed -i .sed "s/template/$DIR/g"
-  find $DIR -name "*.sed" -delete
-  echo "Directory created!"
-  exit 0
+if [[ $# -gt 1 ]]; then
+  case "$2" in
+    "-f" )
+      [ -d $DIR ] && echo "Directory already exists!" && exit 1
+      cp -r template $DIR
+      mv $DIR/src/template $DIR/src/$DIR
+      grep -rlI "template" $DIR | xargs sed -i .sed "s/template/$DIR/g"
+      find $DIR -name "*.sed" -delete
+      echo "Directory created!"
+      exit 0
+      ;;
+    "-r" )
+      cd $DIR || exit 1
+      lein repl
+      ;;
+    * )
+      print_usage
+  esac
 fi
 
 RED="\e[31m"
