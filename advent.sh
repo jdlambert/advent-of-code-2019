@@ -16,10 +16,13 @@ if [[ $# -gt 1 ]]; then
   case "$2" in
     "-f" )
       [ -d $DIR ] && echo "Directory already exists!" && exit 1
+      URL=https://adventofcode.com/2019/day/$1
+      open -a "Google Chrome" $URL
       cp -r template $DIR
       mv $DIR/src/template $DIR/src/$DIR
       grep -rlI "template" $DIR | xargs sed -i .sed "s/template/$DIR/g"
       find $DIR -name "*.sed" -delete
+      curl $URL/input -H "cookie: $(cat cookie)" > $DIR/input.txt
       echo "Directory created!"
       exit 0
       ;;
