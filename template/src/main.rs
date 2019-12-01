@@ -1,16 +1,14 @@
 use std::{fs, str::Lines};
 
-type Data = i32;
-
-fn parse_data(lines: Lines) -> Vec<Data> {
-    lines.map(|x| x.parse::<Data>().unwrap()).collect()
+fn parse_data(lines: Lines) -> Vec<u32> {
+    lines.map(|x| x.parse::<u32>().unwrap()).collect()
 }
 
-fn part1(data: &Vec<Data>) -> &str {
+fn part1(data: &Vec<u32>) -> &str {
     "nothing yet"
 }
 
-fn part2(data: &Vec<Data>) -> &str {
+fn part2(data: &Vec<u32>) -> &str {
     "nothing yet"
 }
 
