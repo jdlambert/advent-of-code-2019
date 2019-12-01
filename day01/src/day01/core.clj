@@ -9,19 +9,18 @@
       (-> mass
           (/ 3)
           Math/floor
-          (- 2)
-          int))
+          int
+          (- 2)))
 
 (defn part1 []
   (reduce + (map fuel data)))
 
 (defn total-fuel
-      [mass]
-      (loop [total (fuel mass)
-             current (fuel total)]
-        (if (<= current 0) 
-            total
-            (recur (+ total current) (fuel current)))))
+  [mass]
+  (->> (fuel mass)
+       (iterate fuel)
+       (take-while (partial < 1))
+       (reduce +)))
 
 (defn part2 []
   (reduce + (map total-fuel data)))
