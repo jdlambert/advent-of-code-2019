@@ -19,7 +19,7 @@
   [mass]
   (->> (fuel mass)
        (iterate fuel)
-       (take-while (partial < 1))
+       (take-while #(> % 0))
        (reduce +)))
 
 (defn part2 []
