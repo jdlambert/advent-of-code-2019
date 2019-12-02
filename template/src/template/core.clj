@@ -1,8 +1,10 @@
 (ns template.core
   (:gen-class))
 
-(def input (clojure.string/split-lines (slurp "input.txt")))
-(def data (map read-string input))
+(def input
+  (->> (slurp "input.txt")
+       clojure.string/split-lines
+       (map read-string)))
 
 (defn part1 []
   'nil)
