@@ -1,6 +1,6 @@
 use std::fs;
 
-fn execute(program: &Vec<u32>, noun: u32, verb: u32) -> u32 {
+fn execute(program: &Vec<u32>, noun: u32, verb: u32) -> Result<u32, &str> {
     let mut program = program.clone();
     program[1] = noun;
     program[2] = verb;
@@ -12,28 +12,28 @@ fn execute(program: &Vec<u32>, noun: u32, verb: u32) -> u32 {
         match op {
             1 => program[out] = a + b,
             2 => program[out] = a * b,
-            99 => return program[0],
-            _ => panic!("Unexpected opcode!"),
+            99 => return Ok(program[0]),
+            _ => return Err("Unexpected opcode!"),
         }
     }
-    panic!("Never halted!")
+    Err("Never halted!")
 }
 
-fn part1(data: &Vec<u32>) -> u32 {
-    execute(data, 12, 2)
+fn part1(data: &Vec<u32>) -> Result<u32, &str> {
+    Ok(execute(data, 12, 2)?)
 }
 
 const TARGET: u32 = 19690720;
 
-fn part2(data: &Vec<u32>) -> u32 {
+fn part2(data: &Vec<u32>) -> Result<u32, &str> {
     for noun in 0..100 {
         for verb in 0..100 {
-            if execute(data, noun, verb) == TARGET {
-                return 100 * noun + verb;
+            if execute(data, noun, verb)? == TARGET {
+                return Ok(100 * noun + verb);
             }
         }
     }
-    return 0;
+    Err("No answer in provided range!")
 }
 
 fn main() {
@@ -44,6 +44,6 @@ fn main() {
         .map(|x| x.parse::<u32>().unwrap())
         .collect();
 
-    println!("Part 1: {}", part1(&data));
-    println!("Part 1: {}", part2(&data));
+    println!("Part 1: {}", part1(&data).unwrap());
+    println!("Part 1: {}", part2(&data).unwrap());
 }
