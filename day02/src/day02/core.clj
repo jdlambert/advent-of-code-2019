@@ -4,25 +4,21 @@
 (require '[clojure.string :as str])
 
 (def input
-  (map read-string 
+  (vec (map read-string 
        (str/split (slurp "input.txt")
-                  #",")))
+                  #","))))
 
 (defn execute
     [noun verb]
-    (let [program (-> (vec input)
-                      (assoc 1 noun)
-                      (assoc 2 verb))]
-         (loop [memory program
-                position 0]
-                (let [op  (get memory position)
-                      a   (get memory (get memory (inc position)))
-                      b   (get memory (get memory (+ 2 position)))
-                      out (get memory (+ 3 position))]
-                      (case op
-                            1  (recur (assoc memory out (+ a b)) (+ 4 position))
-                            2  (recur (assoc memory out (* a b)) (+ 4 position))
-                            99 (get memory 0))))))
+    (loop [memory (assoc input 1 noun 2 verb)
+           position 0]
+          (let [[op a b out] (subvec memory position (+ position 4))]
+               (if (= op 99)
+                   (first memory)
+                   (let [a (get memory a) b (get memory b)
+                         op (case op 1 + 2 *)]
+                        (recur (assoc memory out (op a b))
+                               (+ 4 position)))))))
 
 (defn part1 []
   (execute 12 2))
