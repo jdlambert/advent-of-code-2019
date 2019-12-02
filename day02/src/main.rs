@@ -1,6 +1,8 @@
 use std::fs;
 
-fn execute(program: &Vec<u32>, noun: u32, verb: u32) -> Result<u32, &str> {
+type Result<T> = std::result::Result<T, &'static str>;
+
+fn execute(program: &Vec<u32>, noun: u32, verb: u32) -> Result<u32> {
     let mut program = program.clone();
     program[1] = noun;
     program[2] = verb;
@@ -19,13 +21,13 @@ fn execute(program: &Vec<u32>, noun: u32, verb: u32) -> Result<u32, &str> {
     Err("Never halted!")
 }
 
-fn part1(data: &Vec<u32>) -> Result<u32, &str> {
+fn part1(data: &Vec<u32>) -> Result<u32> {
     Ok(execute(data, 12, 2)?)
 }
 
 const TARGET: u32 = 19690720;
 
-fn part2(data: &Vec<u32>) -> Result<u32, &str> {
+fn part2(data: &Vec<u32>) -> Result<u32> {
     for noun in 0..100 {
         for verb in 0..100 {
             if execute(data, noun, verb)? == TARGET {
