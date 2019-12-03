@@ -64,7 +64,7 @@ impl Wire {
     }
 }
 
-fn part1(wires: (Wire, Wire)) -> u32 {
+fn part1(wires: &(Wire, Wire)) -> u32 {
     let intersection = wires.0.intersection(&wires.1);
     let min = intersection
         .iter()
@@ -73,7 +73,7 @@ fn part1(wires: (Wire, Wire)) -> u32 {
     (min.0.abs() + min.1.abs()) as u32
 }
 
-fn part2(wires: (Wire, Wire)) -> u32 {
+fn part2(wires: &(Wire, Wire)) -> u32 {
     let intersection = wires.0.intersection(&wires.1);
     let first = wires.0.locations();
     let second = wires.1.locations();
@@ -91,12 +91,6 @@ fn main() {
         Wire::from(lines.next().unwrap().to_string()),
         Wire::from(lines.next().unwrap().to_string()),
     );
-    println!("Part 1: {:?}", part1(data));
-    let content = fs::read_to_string("./input.txt").unwrap();
-    let mut lines = content.lines();
-    let data = (
-        Wire::from(lines.next().unwrap().to_string()),
-        Wire::from(lines.next().unwrap().to_string()),
-    );
-    println!("Part 1: {}", part2(data));
+    println!("Part 1: {:?}", part1(&data));
+    println!("Part 1: {}", part2(&data));
 }
