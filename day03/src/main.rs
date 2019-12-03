@@ -91,6 +91,6 @@ fn main() {
         Wire::from(lines.next().unwrap().to_string()),
         Wire::from(lines.next().unwrap().to_string()),
     );
-    println!("Part 1: {:?}", part1(&data));
+    println!("Part 1: {}", part1(&data));
     println!("Part 1: {}", part2(&data));
 }
