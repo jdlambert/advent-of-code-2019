@@ -1,4 +1,7 @@
-use std::{fs, collections::{HashSet, HashMap}};
+use std::{
+    collections::{HashMap, HashSet},
+    fs,
+};
 
 extern crate regex;
 use regex::Regex;
@@ -24,15 +27,14 @@ fn is_monotonic(string: String) -> bool {
 }
 
 fn part1(codes: Vec<String>) -> usize {
-    codes.iter()
-         .filter(|s| frequencies(s).contains(&2))
-         .count()
+    codes.iter().filter(|s| frequencies(s).contains(&2)).count()
 }
 
 fn part2(codes: Vec<String>) -> usize {
-    codes.iter()
-         .filter(|s| frequencies(s).iter().any(|v| *v > 1))
-         .count()
+    codes
+        .iter()
+        .filter(|s| frequencies(s).iter().any(|v| *v > 1))
+        .count()
 }
 
 fn main() {
@@ -42,10 +44,11 @@ fn main() {
     let first: u32 = caps[1].parse().unwrap();
     let last: u32 = caps[2].parse().unwrap();
 
-    let codes: Vec<String> = (first..=last).map(|i| format!("{}", i))
-                                           .filter(|s| is_monotonic(s.clone()))
-                                           .collect();
-    
+    let codes: Vec<String> = (first..=last)
+        .map(|i| format!("{}", i))
+        .filter(|s| is_monotonic(s.clone()))
+        .collect();
+
     println!("Part 1: {}", part1(codes.clone()));
     println!("Part 1: {}", part2(codes.clone()));
 }
