@@ -1,96 +1,66 @@
-use std::{
-    collections::{HashMap, HashSet},
-    fs,
-};
+use std::{collections::HashSet, fs};
 
-use std::convert::From;
+type Wire = Vec<(i32, i32)>;
 
-#[derive(Debug)]
-struct WireSection {
-    direction: (i32, i32),
-    length: u32,
+fn build_subwire(start: &(i32, i32), subwire_string: String) -> Wire {
+    let mut chars = subwire_string.chars();
+
+    let dir = match chars.next().unwrap() {
+        'U' => (1, 0),
+        'D' => (-1, 0),
+        'L' => (0, 1),
+        'R' => (0, -1),
+        _ => panic!("Unknown direction"),
+    };
+    let len: i32 = chars.as_str().parse().unwrap();
+
+    (1..=len)
+        .map(|i| (start.0 + (i * dir.0), start.1 + (i * dir.1)))
+        .collect()
 }
 
-impl From<String> for WireSection {
-    fn from(string: String) -> Self {
-        let mut chars = string.chars();
-        let direction = match chars.next() {
-            Some('U') => (1, 0),
-            Some('D') => (-1, 0),
-            Some('R') => (0, 1),
-            Some('L') => (0, -1),
-            _ => panic!("Unrecognized char!"),
-        };
-        let length = chars.as_str().parse().unwrap();
-        WireSection { direction, length }
+fn build_wire(wire_string: String) -> Wire {
+    let mut wire: Wire = vec![(0, 0)];
+    for subwire_str in wire_string.split(',') {
+        wire.append(&mut build_subwire(
+            &wire.last().unwrap(),
+            subwire_str.to_string(),
+        ))
     }
+    wire
 }
 
-#[derive(Debug)]
-struct Wire {
-    sections: Vec<WireSection>,
-}
-
-impl From<String> for Wire {
-    fn from(string: String) -> Self {
-        let mut sections = vec![];
-        for s in string.split(",") {
-            sections.push(WireSection::from(s.to_string()));
-        }
-        Wire { sections }
-    }
-}
-
-impl Wire {
-    fn locations(&self) -> HashMap<(i32, i32), u32> {
-        let mut locs = HashMap::new();
-        let mut cur = (0, 0);
-        let mut steps = 0;
-        for section in &self.sections {
-            let dir = section.direction;
-            for _ in 0..section.length {
-                steps += 1;
-                cur = (cur.0 + dir.0, cur.1 + dir.1);
-                locs.insert(cur, steps);
-            }
-        }
-        locs
-    }
-
-    fn intersection(&self, other: &Wire) -> HashSet<(i32, i32)> {
-        let mine: HashSet<(i32, i32)> = self.locations().keys().cloned().collect();
-        let theirs: HashSet<(i32, i32)> = other.locations().keys().cloned().collect();
-        mine.intersection(&theirs).cloned().collect()
-    }
-}
-
-fn part1(wires: &(Wire, Wire)) -> u32 {
-    let intersection = wires.0.intersection(&wires.1);
-    let min = intersection
+fn part1(intersection: HashSet<&&(i32, i32)>) -> i32 {
+    intersection
         .iter()
-        .min_by_key(|p| (p.0.abs() + p.1.abs()))
-        .unwrap();
-    (min.0.abs() + min.1.abs()) as u32
+        .map(|p| (p.0.abs() + p.1.abs()))
+        .filter(|p| 0 != *p)
+        .min()
+        .unwrap()
 }
 
-fn part2(wires: &(Wire, Wire)) -> u32 {
-    let intersection = wires.0.intersection(&wires.1);
-    let first = wires.0.locations();
-    let second = wires.1.locations();
-    let min = intersection
+fn part2(intersection: HashSet<&&(i32, i32)>, first: &Wire, second: &Wire) -> usize {
+    intersection
         .iter()
-        .min_by_key(|p| first.get(p).unwrap() + second.get(p).unwrap())
-        .unwrap();
-    (first.get(min).unwrap() + second.get(min).unwrap()) as u32
+        .map(|&p| {
+            first.iter().position(|x| x == *p).unwrap()
+                + second.iter().position(|x| x == *p).unwrap()
+        })
+        .filter(|p| 0 != *p)
+        .min()
+        .unwrap()
 }
 
 fn main() {
     let content = fs::read_to_string("./input.txt").unwrap();
     let mut lines = content.lines();
-    let data = (
-        Wire::from(lines.next().unwrap().to_string()),
-        Wire::from(lines.next().unwrap().to_string()),
-    );
-    println!("Part 1: {}", part1(&data));
-    println!("Part 1: {}", part2(&data));
+    let first = build_wire(lines.next().unwrap().to_string());
+    let second = build_wire(lines.next().unwrap().to_string());
+
+    let first_set: HashSet<_> = first.iter().clone().collect();
+    let second_set: HashSet<_> = second.iter().clone().collect();
+    let intersection: HashSet<_> = first_set.intersection(&second_set).collect();
+
+    println!("Part 1: {}", part1(intersection.clone()));
+    println!("Part 2: {}", part2(intersection, &first, &second));
 }
