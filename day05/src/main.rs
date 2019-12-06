@@ -18,7 +18,9 @@ fn execute(program: &Vec<i32>, input: i32) -> Result<i32> {
         let b = if (op / 1000) % 10 == 1 {
             *program.get(i + 2).unwrap_or(&0)
         } else {
-            *program.get(*program.get(i + 2).unwrap_or(&0) as usize).unwrap_or(&0)
+            *program
+                .get(*program.get(i + 2).unwrap_or(&0) as usize)
+                .unwrap_or(&0)
         };
         let out = *program.get(i + 3).unwrap_or(&0) as usize;
         match op % 10 {
