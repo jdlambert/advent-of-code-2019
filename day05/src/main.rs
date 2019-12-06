@@ -8,19 +8,13 @@ fn execute(program: &Vec<i32>, input: i32) -> Result<i32> {
     let mut i = 0;
     loop {
         let op = program[i];
-        let a = if op == 99 {
-            0
-        } else if (op / 100) % 10 == 1 {
-            *program.get(i + 1).unwrap_or(&0)
-        } else {
-            *program.get(program[i + 1] as usize).unwrap_or(&0)
+        let mut a = *program.get(i + 1).unwrap_or(&0);
+        if (op / 100) % 10 == 0 {
+            a = *program.get(a as usize).unwrap_or(&0);
         };
-        let b = if (op / 1000) % 10 == 1 {
-            *program.get(i + 2).unwrap_or(&0)
-        } else {
-            *program
-                .get(*program.get(i + 2).unwrap_or(&0) as usize)
-                .unwrap_or(&0)
+        let mut b = *program.get(i + 2).unwrap_or(&0);
+        if (op / 1000) % 10 == 0 {
+            b = *program.get(b as usize).unwrap_or(&0);
         };
         let out = *program.get(i + 3).unwrap_or(&0) as usize;
         match op % 10 {
