@@ -30,17 +30,14 @@ fn part2(orbits: &HashMap<&str, &str>) -> u32 {
 }
 
 fn main() {
-    let mut orbits = HashMap::new();
-
     let content = fs::read_to_string("./input.txt").unwrap();
 
-    content
+    let orbits: HashMap<_,_> = content
         .trim()
         .lines()
-        .map(|x| x.split(')').collect::<Vec<&str>>())
-        .for_each(|orbit| {
-            orbits.insert(orbit[1], orbit[0]);
-        });
+        .map(|line| line.split(')').collect::<Vec<&str>>())
+        .map(|pair| (pair[1], pair[0]))
+        .collect();
 
     println!("Part 1: {}", part1(&orbits));
     println!("Part 1: {}", part2(&orbits));
