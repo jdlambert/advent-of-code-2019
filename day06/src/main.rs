@@ -3,14 +3,13 @@ use std::{
     fs,
 };
 
+use itertools::iterate;
+
 fn orbits_to_center<'a>(planet: &'a str, orbits: &'a HashMap<&str, &str>) -> Vec<&'a str> {
-    let mut current = planet;
-    let mut orbited = vec![];
-    while current != "COM" {
-        current = orbits.get(current).unwrap();
-        orbited.push(current);
-    }
-    orbited
+    iterate(planet, |&current| orbits.get(current).unwrap_or(&""))
+        .take_while(|&planet| planet != "")
+        .skip(1) // The starting planet
+        .collect()
 }
 
 fn part1(orbits: &HashMap<&str, &str>) -> u32 {
@@ -32,7 +31,7 @@ fn part2(orbits: &HashMap<&str, &str>) -> u32 {
 fn main() {
     let content = fs::read_to_string("./input.txt").unwrap();
 
-    let orbits: HashMap<_,_> = content
+    let orbits: HashMap<_, _> = content
         .lines()
         .map(|line| line.split(')').collect::<Vec<&str>>())
         .map(|pair| (pair[1], pair[0]))
