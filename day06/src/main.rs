@@ -33,7 +33,6 @@ fn main() {
     let content = fs::read_to_string("./input.txt").unwrap();
 
     let orbits: HashMap<_,_> = content
-        .trim()
         .lines()
         .map(|line| line.split(')').collect::<Vec<&str>>())
         .map(|pair| (pair[1], pair[0]))
