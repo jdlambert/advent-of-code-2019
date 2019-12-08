@@ -2,10 +2,10 @@ use std::{collections::HashSet, fs};
 
 type Wire = Vec<(i32, i32)>;
 
-fn build_subwire(start: &(i32, i32), subwire_string: String) -> Wire {
+fn build_subwire((x, y): &(i32, i32), subwire_string: String) -> Wire {
     let mut chars = subwire_string.chars();
 
-    let dir = match chars.next().unwrap() {
+    let (dx, dy) = match chars.next().unwrap() {
         'U' => (1, 0),
         'D' => (-1, 0),
         'L' => (0, 1),
@@ -14,9 +14,7 @@ fn build_subwire(start: &(i32, i32), subwire_string: String) -> Wire {
     };
     let len: i32 = chars.as_str().parse().unwrap();
 
-    (1..=len)
-        .map(|i| (start.0 + (i * dir.0), start.1 + (i * dir.1)))
-        .collect()
+    (1..=len).map(|i| (x + (i * dx), y + (i * dy))).collect()
 }
 
 fn build_wire(wire_string: String) -> Wire {
