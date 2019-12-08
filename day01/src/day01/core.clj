@@ -5,12 +5,12 @@
 (def data (map read-string input))
 
 (defn fuel
-      [mass]
-      (-> mass
-          (/ 3)
-          Math/floor
-          int
-          (- 2)))
+  [mass]
+  (-> mass
+      (/ 3)
+      Math/floor
+      int
+      (- 2)))
 
 (defn part1 []
   (reduce + (map fuel data)))

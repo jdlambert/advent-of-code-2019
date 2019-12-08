@@ -1,8 +1,8 @@
 (ns day04.core
   (:gen-class))
 
-(defn monotonic [code] 
-      (= code (clojure.string/join (sort code))))
+(defn monotonic [code]
+  (= code (clojure.string/join (sort code))))
 
 (def input
   (->> (slurp "input.txt")
@@ -13,7 +13,7 @@
        (filter monotonic))) ;; Used in both parts, might as well do it here
 
 (defn counts [code]
-     (set (vals (frequencies code))))
+  (set (vals (frequencies code))))
 
 (defn part1 []
   (->> input

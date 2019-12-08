@@ -2,19 +2,19 @@
   (:gen-class))
 
 (require '[clojure.string :as str] '[clojure.set :as hashset])
-  
+
 (defn new-points
   [[x y] dir len]
-    (case dir
-      \R (for [i (map inc (range x (+ x len)))] [i y])
-      \L (for [i (map dec (range x (- x len) -1))] [i y])
-      \U (for [j (map inc (range y (+ y len)))] [x j])
-      \D (for [j (map dec (range y (- y len) -1))] [x j])))
+  (case dir
+    \R (for [i (map inc (range x (+ x len)))] [i y])
+    \L (for [i (map dec (range x (- x len) -1))] [i y])
+    \U (for [j (map inc (range y (+ y len)))] [x j])
+    \D (for [j (map dec (range y (- y len) -1))] [x j])))
 
 (defn add-section
   [wire [dir & len-chars]]
-    (let [len (read-string (apply str len-chars))]
-      (concat wire (new-points (last wire) dir len))))
+  (let [len (read-string (apply str len-chars))]
+    (concat wire (new-points (last wire) dir len))))
 
 (defn string->wire
   [string]
