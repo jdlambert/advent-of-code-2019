@@ -31,7 +31,7 @@ fn build_wire(wire_string: String) -> Wire {
 fn part1(intersection: HashSet<&&(i32, i32)>) -> i32 {
     intersection
         .iter()
-        .map(|p| (p.0.abs() + p.1.abs()))
+        .map(|(x, y)| (x.abs() + y.abs()))
         .filter(|p| 0 != *p)
         .min()
         .unwrap()
