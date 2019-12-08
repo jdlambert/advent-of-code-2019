@@ -1,15 +1,11 @@
+use permute;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::{
     fs,
     thread::{spawn, JoinHandle},
 };
-use permute;
 
-fn execute(
-    mut program: Vec<i32>,
-    input: Receiver<i32>,
-    output: Sender<i32>,
-) -> JoinHandle<i32> {
+fn execute(mut program: Vec<i32>, input: Receiver<i32>, output: Sender<i32>) -> JoinHandle<i32> {
     let handle = spawn(move || {
         let mut i = 0;
         let mut rv = 0;
@@ -75,7 +71,7 @@ fn execute(
     return handle;
 }
 
-fn signal_output<'a, T: Iterator<Item=&'a i32>>(program: Vec<i32>, mut sequence: T) -> i32 {
+fn signal_output<'a, T: Iterator<Item = &'a i32>>(program: Vec<i32>, mut sequence: T) -> i32 {
     let (e_out, a_in) = channel();
     let (a_out, b_in) = channel();
     let (b_out, c_in) = channel();

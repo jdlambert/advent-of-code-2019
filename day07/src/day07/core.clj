@@ -11,7 +11,7 @@
                   #","))))
 
 (defn execute
-    [in-c out-c return-c]
+    [in-c out-c]
     (go-loop [memory input i 0 rv 0]
       (let [op (memory i)
             a-i (= 1 (mod (quot op 100) 10))
@@ -28,13 +28,12 @@
                   6 (recur memory (if (= 0 a) b (+ 3 i)) rv)
                   7 (recur (assoc memory out (if (< a b) 1 0)) (+ 4 i) rv)
                   8 (recur (assoc memory out (if (= a b) 1 0)) (+ 4 i) rv)
-                  9 (if (not= return-c 0) (>! return-c rv) 0)))))
+                  9 rv))))
 
 (defn get-output [[a b c d e]]
-  (let [r (chan 2) ea (chan 2) ab (chan 2) bc (chan 2) cd (chan 2) de (chan 2)]
+  (let [ea (chan 2) ab (chan 2) bc (chan 2) cd (chan 2) de (chan 2)]
         (>!! ea a) (>!! ab b) (>!! bc c) (>!! cd d) (>!! de e) (>!! ea 0)
-        (execute ea ab 0) (execute ab bc 0) (execute bc cd 0) (execute cd de 0) (execute de ea r)
-        (<!! r)))
+        (execute ea ab) (execute ab bc) (execute bc cd) (execute cd de) (<!! (execute de ea))))
       
 (defn part1 []
   (->> (combo/permutations (range 5))
