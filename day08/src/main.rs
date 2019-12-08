@@ -1,5 +1,8 @@
 use std::{fs, slice::Chunks};
 
+const WIDTH: usize = 25;
+const HEIGHT: usize = 6;
+
 fn counts(layer: Vec<u8>, target: char) -> usize {
     layer.iter().filter(|c| **c == target as u8).count()
 }
@@ -21,9 +24,9 @@ fn color(pixel: usize, layers: Chunks<u8>) -> u8 {
 
 fn part2(layers: Chunks<u8>) -> String {
     let mut a = String::new();
-    for i in 0..6 {
-        for j in 0..25 {
-            let color = color(i * 25 + j, layers.clone());
+    for i in 0..HEIGHT {
+        for j in 0..WIDTH {
+            let color = color(i * WIDTH + j, layers.clone());
             a.push(if color == '1' as u8 { 'X' } else { ' ' });
         }
         a.push('\n');
@@ -33,7 +36,7 @@ fn part2(layers: Chunks<u8>) -> String {
 
 fn main() {
     let content = fs::read_to_string("./input.txt").unwrap();
-    let layers = content.trim().as_bytes().chunks(25 * 6);
+    let layers = content.trim().as_bytes().chunks(WIDTH * HEIGHT);
     println!("Part 1: {}", part1(layers.clone()));
     println!("Part 2: \n{}", part2(layers.clone()));
 }
