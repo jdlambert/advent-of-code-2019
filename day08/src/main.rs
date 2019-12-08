@@ -2,23 +2,26 @@ use std::{fs, slice::Chunks};
 
 const WIDTH: usize = 25;
 const HEIGHT: usize = 6;
+const BLACK: u8 = '1' as u8;
+const WHITE: u8 = '0' as u8;
+const TRANSLUCENT: u8 = '2' as u8;
 
-fn counts(layer: Vec<u8>, target: char) -> usize {
-    layer.iter().filter(|c| **c == target as u8).count()
+fn counts(layer: Vec<u8>, target: u8) -> usize {
+    layer.iter().filter(|c| **c == target).count()
 }
 
 fn part1(layers: Chunks<u8>) -> usize {
     let min_layer = layers
-        .min_by(|l1, l2| counts(l1.to_vec(), '0').cmp(&counts(l2.to_vec(), '0')))
+        .min_by(|l1, l2| counts(l1.to_vec(), BLACK).cmp(&counts(l2.to_vec(), BLACK)))
         .unwrap();
 
-    counts(min_layer.to_vec(), '1') * counts(min_layer.to_vec(), '2')
+    counts(min_layer.to_vec(), WHITE) * counts(min_layer.to_vec(), TRANSLUCENT)
 }
 
 fn color(pixel: usize, layers: Chunks<u8>) -> u8 {
     *layers
         .map(|layer| layer.get(pixel).unwrap())
-        .find(|pix| **pix != '2' as u8)
+        .find(|pix| **pix != TRANSLUCENT)
         .unwrap()
 }
 
@@ -27,7 +30,7 @@ fn part2(layers: Chunks<u8>) -> String {
     for i in 0..HEIGHT {
         for j in 0..WIDTH {
             let color = color(i * WIDTH + j, layers.clone());
-            a.push(if color == '1' as u8 { 'X' } else { ' ' });
+            a.push(if color == BLACK { 'X' } else { ' ' });
         }
         a.push('\n');
     }
