@@ -21,7 +21,6 @@ fn color(pixel: usize, layers: Chunks<u8>) -> u8 {
 
 fn part2(layers: Chunks<u8>) -> String {
     let mut a = String::new();
-    a.push('\n');
     for i in 0..6 {
         for j in 0..25 {
             let color = color(i * 25 + j, layers.clone());
@@ -36,5 +35,5 @@ fn main() {
     let content = fs::read_to_string("./input.txt").unwrap();
     let layers = content.trim().as_bytes().chunks(25 * 6);
     println!("Part 1: {}", part1(layers.clone()));
-    println!("Part 1: {}", part2(layers.clone()));
+    println!("Part 1: \n{}", part2(layers.clone()));
 }
