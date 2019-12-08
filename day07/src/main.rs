@@ -87,9 +87,7 @@ fn signal_output<'a, T: Iterator<Item = &'a i32>>(program: Vec<i32>, mut sequenc
     execute(program.clone(), b_in, b_out);
     execute(program.clone(), c_in, c_out);
     execute(program.clone(), d_in, d_out);
-    let last_handle = execute(program.clone(), e_in, e_out);
-
-    last_handle.join().unwrap()
+    execute(program.clone(), e_in, e_out).join().unwrap()
 }
 
 fn part1(program: Vec<i32>) -> i32 {
