@@ -35,5 +35,5 @@ fn main() {
     let content = fs::read_to_string("./input.txt").unwrap();
     let layers = content.trim().as_bytes().chunks(25 * 6);
     println!("Part 1: {}", part1(layers.clone()));
-    println!("Part 1: \n{}", part2(layers.clone()));
+    println!("Part 2: \n{}", part2(layers.clone()));
 }
