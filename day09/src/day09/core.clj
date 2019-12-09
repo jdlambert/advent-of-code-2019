@@ -4,20 +4,20 @@
 (require '[clojure.string :as str])
 
 (def input
-  (zipmap (range) (vec (map read-string
+  (zipmap (range) (map read-string
     (str/split (slurp "input.txt")
-               #",")))))
+               #","))))
 
 (defn get-val [i mode memory rel]
   (case mode
-    0 (get memory (get memory i 0) 0)
-    1 (get memory i 0)
-    2 (get memory (get memory (+ rel i) 0) 0)))
+    0 (get memory (get memory i) 0)
+    1 (get memory i)
+    2 (get memory (+ rel (get memory i)) 0)))
 
 (defn get-addr [i mode memory rel]
   (case mode
-    0 (get memory i 0)
-    2 (+ rel (get memory (+ rel i) 0))))
+    0 (get memory i)
+    2 (+ rel (get memory i))))
 
 (defn execute
   [in]
