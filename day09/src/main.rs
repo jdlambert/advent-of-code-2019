@@ -8,14 +8,14 @@ fn get_val(index: i64, mode: i64, rel: i64, program: &HashMap<i64, i64>) -> i64 
         0 => *program.get(&immediate).unwrap_or(&0),
         1 => immediate,
         2 => *program.get(&(rel + immediate)).unwrap_or(&0),
-        _ => panic!("Unkown mode!"),
+        _ => panic!("Invalid mode!"),
     }
 }
 fn get_addr(index: i64, mode: i64, rel: i64, program: &HashMap<i64, i64>) -> i64 {
     match mode {
         0 => *program.get(&index).unwrap_or(&0),
         2 => rel + *program.get(&index).unwrap_or(&0),
-        _ => panic!("Unkown mode!"),
+        _ => panic!("Invalid mode!"),
     }
 }
 
