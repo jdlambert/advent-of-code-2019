@@ -93,7 +93,7 @@ fn part2(data: &HashMap<i64, i64>) -> Result<i64> {
 
 fn main() {
     let content = fs::read_to_string("./input.txt").unwrap();
-    let mut data: HashMap<i64, i64> = content
+    let data: HashMap<i64, i64> = content
         .trim()
         .split(',')
         .map(|x| x.parse::<i64>().unwrap())
