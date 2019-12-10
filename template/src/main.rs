@@ -1,7 +1,5 @@
 use std::fs;
 
-type Result<T> = std::result::Result<T, &'static str>;
-
 fn part1(data: &Vec<u32>) -> &str {
     "nothing yet"
 }

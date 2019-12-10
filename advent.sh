@@ -14,7 +14,7 @@ if [ ! -d $DIR ]; then
   grep -rlI "template" $DIR | xargs sed -i .sed "s/template/$DIR/g"
   find $DIR -name "*.sed" -delete
   curl -f $URL/input -H "cookie: $(cat cookie)" > $DIR/input.txt 2> /dev/null
-  if [ $? ]; then
+  if [ $? -ne 0 ]; then
     echo "Input not available!"
     rm -rf $DIR
     exit 1
