@@ -20,6 +20,7 @@ if [ ! -d $DIR ]; then
     exit 1
   else
     echo "Directory created!"
+    exit 0
   fi
 fi
 
