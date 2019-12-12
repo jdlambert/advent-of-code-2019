@@ -91,14 +91,15 @@ fn execute(
     return handle;
 }
 
-fn part1(data: &HashMap<i64, i64>) -> usize {
+fn paint(data: HashMap<i64, i64>, initial_color: i64) -> HashMap<(i64, i64), i64> {
     let (bot_send, my_recv) = channel();
     let (my_send, bot_recv) = channel();
     let bot_handle = execute(data.clone(), bot_recv, bot_send);
     let paint_handle = spawn(move || {
         let mut pos = (0, 0);
-        let mut direction = (0, 1);
+        let mut direction = (0, -1);
         let mut painted = HashMap::new();
+        painted.insert(pos, initial_color);
         loop {
             let spot = painted.get(&pos);
             if let Some(color) = spot {
@@ -107,25 +108,25 @@ fn part1(data: &HashMap<i64, i64>) -> usize {
                 my_send.send(0).unwrap_or(());
             }
             match my_recv.recv() {
-                Ok(i) => painted.insert(pos, i),
-                Err(e) => return painted.len()
+                Ok(color) => painted.insert(pos, color),
+                Err(_) => return painted,
             };
             direction = match my_recv.recv() {
                 Ok(0) => match direction {
-                    (1, 0) => (0, 1),
-                    (-1, 0) => (0, -1),
-                    (0, 1) => (-1, 0),
-                    (0, -1) => (1, 0),
+                    (1, 0) => (0, -1),
+                    (0, -1) => (-1, 0),
+                    (-1, 0) => (0, 1),
+                    (0, 1) => (1, 0),
                     _ => panic!("Bad direction!"),
                 },
                 Ok(1) => match direction {
-                    (1, 0) => (0, -1),
-                    (-1, 0) => (0, 1),
-                    (0, 1) => (0, -1),
-                    (0, -1) => (0, 1),
+                    (1, 0) => (0, 1),
+                    (0, 1) => (-1, 0),
+                    (-1, 0) => (0, -1),
+                    (0, -1) => (1, 0),
                     _ => panic!("Bad direction!"),
                 },
-                Err(_) => return painted.len(),
+                Err(_) => return painted,
                 _ => panic!("Bad direction!"),
             };
             pos = (pos.0 + direction.0, pos.1 + direction.1);
@@ -135,8 +136,28 @@ fn part1(data: &HashMap<i64, i64>) -> usize {
     paint_handle.join().unwrap()
 }
 
-fn part2(data: &HashMap<i64, i64>) -> i64 {
-    20
+fn part1(data: &HashMap<i64, i64>) -> usize {
+    paint(data.clone(), 0).len()
+}
+
+fn part2(data: &HashMap<i64, i64>) -> String {
+    let painted = paint(data.clone(), 1);
+    let xs = painted.keys().map(|(x, _)| *x);
+    let ys = painted.keys().map(|(_, y)| *y);
+    let max_x = xs.clone().max().unwrap() + 1;
+    let min_x = xs.min().unwrap();
+    let max_y = ys.clone().max().unwrap() + 1;
+    let min_y = ys.min().unwrap();
+    let mut result = String::new();
+    for y in min_y..max_y {
+        for x in min_x..max_x {
+            result.push(if painted.get(&(x, y)).unwrap_or(&0) > &0 {
+                '#'
+            } else { ' ' });
+        }
+        result.push('\n');
+    }
+    result
 }
 
 fn main() {
@@ -150,5 +171,5 @@ fn main() {
         .collect();
 
     println!("Part 1: {}", part1(&data));
-    println!("Part 2: {}", part2(&data));
+    println!("Part 2: \n{}", part2(&data));
 }
