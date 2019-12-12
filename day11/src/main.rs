@@ -153,7 +153,9 @@ fn part2(data: &HashMap<i64, i64>) -> String {
         for x in min_x..max_x {
             result.push(if painted.get(&(x, y)).unwrap_or(&0) > &0 {
                 '#'
-            } else { ' ' });
+            } else {
+                ' '
+            });
         }
         result.push('\n');
     }
