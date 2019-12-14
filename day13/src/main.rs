@@ -93,67 +93,31 @@ fn execute(
 
 fn part1(data: &HashMap<i64, i64>) -> usize {
     let (bot_send, my_recv) = channel();
-    let (_my_send, bot_recv) = channel();
+    let (_, bot_recv) = channel();
     execute(data.clone(), bot_recv, bot_send);
     let draw_handle = spawn(move || {
-        let mut tiles = HashMap::new();
+        let mut count = 0;
         loop {
-            let (x, y, t) = match (my_recv.recv(), my_recv.recv(), my_recv.recv()) {
-                (Ok(i), Ok(j), Ok(u)) => (i, j, u),
-                _ => return tiles,
+            match (my_recv.recv(), my_recv.recv(), my_recv.recv()) {
+                (Ok(_), Ok(_), Ok(t)) => {
+                    if t == 2 {
+                        count += 1
+                    }
+                }
+                _ => return count,
             };
-            tiles.insert((x, y), t);
         }
     });
-    let tiles = draw_handle.join().unwrap();
-    tiles.iter().filter(|(_, tile)| **tile == 2).count()
+    draw_handle.join().unwrap()
 }
 
-fn _render(tiles: &HashMap<(i64, i64), i64>) -> String {
-    let xs = tiles.keys().map(|(x, _)| *x);
-    let ys = tiles.keys().map(|(_, y)| *y);
-    let max_x = xs.clone().max().unwrap() + 1;
-    let min_x = xs.min().unwrap();
-    let max_y = ys.clone().max().unwrap() + 1;
-    let min_y = ys.min().unwrap();
-    let mut result = String::new();
-    for y in min_y..max_y {
-        for x in min_x..max_x {
-            result.push(match tiles.get(&(x, y)).unwrap_or(&0) {
-                0 => ' ',
-                1 => '#',
-                2 => '_',
-                3 => '=',
-                4 => 'o',
-                _ => panic!("Unknown tile!"),
-            });
-        }
-        result.push('\n');
-    }
-    result
-}
-
-fn get_tile(tiles: &HashMap<(i64, i64), i64>, target: i64) -> Option<(i64, i64)> {
-    match tiles.iter().filter(|(_, m)| **m == target).count() {
-        0 => None,
-        _ => Some(
-            *tiles
-                .iter()
-                .filter(|(_, m)| **m == target)
-                .map(|(pos, _)| *pos)
-                .collect::<Vec<(i64, i64)>>()
-                .first()
-                .unwrap(),
-        ),
-    }
-}
 fn part2(data: &HashMap<i64, i64>) -> i64 {
     let (bot_send, my_recv) = channel();
     let (my_send, bot_recv) = channel();
-    my_send.send(0).unwrap_or(());
     execute(data.clone(), bot_recv, bot_send);
     let play_handle = spawn(move || {
-        let mut tiles = HashMap::new();
+        let mut ball_x;
+        let mut paddle_x = 0;
         let mut score = 0;
         loop {
             match my_recv.recv() {
@@ -162,26 +126,26 @@ fn part2(data: &HashMap<i64, i64>) -> i64 {
                     score = my_recv.recv().unwrap();
                 }
                 Ok(x) => {
-                    let y = my_recv.recv().unwrap();
-                    let tile = my_recv.recv().unwrap();
-                    tiles.insert((x, y), tile);
-                    if tile == 4 {
-                        let (paddle, ball) = (get_tile(&tiles, 3), get_tile(&tiles, 4));
-                        if let (Some((paddle_x, _)), Some((ball_x, _))) = (paddle, ball) {
-                            let val = if paddle_x > ball_x {
-                                -1
-                            } else if paddle_x < ball_x {
-                                1
-                            } else {
-                                0
-                            };
-                            my_send.send(val).unwrap_or(());
+                    my_recv.recv().unwrap();
+                    match my_recv.recv().unwrap() {
+                        3 => paddle_x = x,
+                        4 => {
+                            ball_x = x;
+                            my_send
+                                .send(if paddle_x == 0 || paddle_x == ball_x {
+                                    0
+                                } else if paddle_x > ball_x {
+                                    -1
+                                } else {
+                                    1
+                                })
+                                .unwrap_or(());
                         }
+                        _ => (),
                     }
                 }
                 _ => return score,
             }
-            // println!("{}", render(&tiles));
         }
     });
     play_handle.join().unwrap()
