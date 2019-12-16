@@ -115,18 +115,14 @@ fn bfs_iter(map: &Map, start: (i64, i64)) -> impl Iterator<Item = Vec<(i64, i64)
         let mut next_frontier = Vec::new();
         for &(x, y) in frontier {
             visited.insert((x, y));
+        }
 
-            let adjacent = [(x, y - 1), (x, y + 1), (x - 1, y), (x + 1, y)];
-
-            for next_pos in &adjacent {
-                if !visited.contains(next_pos) {
-                    if let Some(&s) = map.get(&next_pos) {
-                        if s > 0 {
-                            next_frontier.push(*next_pos);
-                        }
-                    }
-                }
-            }
+        for &(x, y) in frontier {
+            next_frontier.extend(
+                [(x, y - 1), (x, y + 1), (x - 1, y), (x + 1, y)]
+                    .iter()
+                    .filter(|pos| !visited.contains(pos) && map.get(&pos).unwrap_or(&0) > &0),
+            );
         }
 
         if next_frontier.is_empty() {
