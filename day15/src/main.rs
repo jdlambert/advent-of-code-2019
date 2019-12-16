@@ -97,7 +97,7 @@ fn execute(
 type Map = HashMap<(i64, i64), i64>;
 
 fn part1(map: &Map) -> usize {
-    bfs_frontier_iter(map, (0, 0))
+    bfs_iter(map, (0, 0))
         .take_while(|frontier| !frontier.into_iter().any(|pos| map.get(&pos) == Some(&2)))
         .count()
 }
@@ -105,39 +105,34 @@ fn part1(map: &Map) -> usize {
 fn part2(map: &Map) -> usize {
     let (oxygen_pos, _) = map.iter().find(|(_, &status)| status == 2).unwrap();
 
-    bfs_frontier_iter(map, *oxygen_pos).count()
+    bfs_iter(map, *oxygen_pos).count() - 1
 }
 
-fn bfs_frontier_iter(map: &Map, start: (i64, i64)) -> impl Iterator<Item = Vec<(i64, i64)>> + '_ {
+fn bfs_iter(map: &Map, start: (i64, i64)) -> impl Iterator<Item = Vec<(i64, i64)>> + '_ {
     let mut visited = HashSet::new();
 
-    std::iter::successors(Some(vec![start]), move |positions| {
-        let mut next_positions = Vec::new();
-        for pos in positions {
-            if visited.contains(pos) {
-                continue;
-            }
-            visited.insert(pos.clone());
+    std::iter::successors(Some(vec![start]), move |frontier| {
+        let mut next_frontier = Vec::new();
+        for &(x, y) in frontier {
+            visited.insert((x, y));
 
-            let adjacent = [
-                (pos.0, pos.1 - 1),
-                (pos.0, pos.1 + 1),
-                (pos.0 - 1, pos.1),
-                (pos.0 + 1, pos.1),
-            ];
+            let adjacent = [(x, y - 1), (x, y + 1), (x - 1, y), (x + 1, y)];
 
             for next_pos in &adjacent {
-                match map.get(&next_pos) {
-                    Some(&s) if s > 0 => next_positions.push(*next_pos),
-                    _ => {}
+                if !visited.contains(next_pos) {
+                    if let Some(&s) = map.get(&next_pos) {
+                        if s > 0 {
+                            next_frontier.push(*next_pos);
+                        }
+                    }
                 }
             }
         }
 
-        if next_positions.is_empty() {
+        if next_frontier.is_empty() {
             None
         } else {
-            Some(next_positions)
+            Some(next_frontier)
         }
     })
 }
