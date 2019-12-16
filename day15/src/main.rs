@@ -113,11 +113,9 @@ fn bfs_iter(map: &Map, start: (i64, i64)) -> impl Iterator<Item = Vec<(i64, i64)
 
     std::iter::successors(Some(vec![start]), move |frontier| {
         let mut next_frontier = Vec::new();
-        for &(x, y) in frontier {
-            visited.insert((x, y));
-        }
 
         for &(x, y) in frontier {
+            visited.insert((x, y));
             next_frontier.extend(
                 [(x, y - 1), (x, y + 1), (x - 1, y), (x + 1, y)]
                     .iter()
