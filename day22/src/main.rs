@@ -11,12 +11,12 @@ enum Action {
 fn part1(actions: &Vec<Action>) -> isize {
     let len = 10007;
     actions.iter().fold(2019, |i, action| match action {
-        Action::Deal(n) => (i * n) % len,
-        Action::Cut(n) if *n >= 0 => (i - n + len) % len,
-        Action::Cut(n) if *n < 0 => (i + n.abs()) % len,
+        Action::Deal(n) => (i * n),
+        Action::Cut(n) if *n >= 0 => (i - n + len),
+        Action::Cut(n) if *n < 0 => (i + n.abs()),
         Action::Stack => len - 1 - i,
         _ => unreachable!(),
-    })
+    } % len)
 }
 
 fn part2() -> &'static str {
