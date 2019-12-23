@@ -94,10 +94,6 @@ fn execute(
     return handle;
 }
 
-/*
- (Part1) and (E or H)
-*/
-
 fn part2(program: HashMap<i64, i64>) -> i64 {
     let (my_send, bot_recv) = channel();
     let (bot_send, my_recv) = channel();
