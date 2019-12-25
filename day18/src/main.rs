@@ -8,7 +8,7 @@ type Pos = (isize, isize);
 type Map = HashMap<Pos, char>;
 type Graph = HashMap<Node, HashSet<(Node, usize)>>;
 
-#[derive(Hash, Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Hash, Debug, Copy, Clone, PartialEq, Eq, Ord, PartialOrd)]
 enum Node {
     Start(u8),
     Key(u8),
@@ -82,7 +82,7 @@ impl State {
         let mut keys = self.keys;
         let mut count = 0;
         while keys > 0 {
-            count += (keys & 1);
+            count += keys & 1;
             keys >>= 1;
         }
         count
@@ -91,7 +91,9 @@ impl State {
 
 impl Ord for State {
     fn cmp(&self, other: &State) -> Ordering {
-        self.key_count().cmp(&other.key_count())
+        other.key_count()
+            .cmp(&self.key_count())
+            .then_with(|| self.bots.cmp(&other.bots))
     }
 }
 
@@ -158,18 +160,26 @@ fn get_successors(graph: &Graph, state: &State, cost: usize) -> HashSet<CostStat
 fn shortest_path(graph: Graph, states: BinaryHeap<CostState>) -> usize {
     let mut states = states.clone();
     let mut seen = HashSet::new();
+    let mut max_count = 0;
 
     while let Some(CostState { state, cost }) = states.pop() {
-        if state.key_count() == 26 {
+        let key_count = state.key_count();
+        if key_count > max_count {
+            max_count = key_count;
+            println!("Max keys {}", max_count);
+        }
+        if key_count == 26 {
             return cost;
         }
-        if seen.contains(&state) {
-            continue;
-        }
+            if seen.contains(&state) {
+                continue
+            }
         seen.insert(state.clone());
 
         for successor in get_successors(&graph, &state, cost) {
-            states.push(successor);
+            if !seen.contains(&successor.state) {
+                states.push(successor);
+            }
         }
     }
 
@@ -199,13 +209,14 @@ fn part2(map: &Map) -> usize {
 
     let graph = map_to_graph(map);
     let mut states = BinaryHeap::new();
-    for bot in 0..5 {
-        let bots = vec![Node::Start(bot)];
-        let keys = 0;
-        let state = State { bots, keys };
-        let cost_state = CostState { state, cost: 0 };
-        states.push(cost_state);
+    let mut bots = vec![];
+    for bot in 0..4 {
+        bots.push(Node::Start(bot));
     }
+    let keys = 0;
+    let state = State { bots, keys };
+    let cost_state = CostState { state, cost: 0 };
+    states.push(cost_state);
 
     shortest_path(graph, states)
 }
@@ -223,6 +234,6 @@ fn main() {
         }
     }
 
-    println!("Part 1: {}", part1(&map));
+    // println!("Part 1: {}", part1(&map));
     println!("Part 2: {}", part2(&mut map));
 }
