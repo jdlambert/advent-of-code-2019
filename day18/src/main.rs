@@ -85,9 +85,8 @@ struct CostState {
 
 impl Ord for CostState {
     fn cmp(&self, other: &CostState) -> Ordering {
-        other
-            .cost
-            .cmp(&self.cost)
+        (other.cost as u32 + self.state.keys.count_ones())
+            .cmp(&(self.cost as u32 + self.state.keys.count_ones()))
     }
 }
 
@@ -135,9 +134,6 @@ fn shortest_path(graph: Graph, states: BinaryHeap<CostState>) -> usize {
     let mut seen = HashSet::new();
 
     while let Some(CostState { state, cost }) = states.pop() {
-        if state.keys.count_ones() == 26 {
-            return cost;
-        }
         if seen.contains(&state) {
             continue;
         }
@@ -145,6 +141,9 @@ fn shortest_path(graph: Graph, states: BinaryHeap<CostState>) -> usize {
 
         for successor in get_successors(&graph, &state, cost) {
             if !seen.contains(&successor.state) {
+                if successor.state.keys.count_ones() == 26 {
+                    return successor.cost;
+                }
                 states.push(successor);
             }
         }
