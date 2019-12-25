@@ -1,5 +1,6 @@
 use std::{
-    collections::{HashMap, HashSet, VecDeque},
+    cmp::Ordering,
+    collections::{BinaryHeap, HashMap, HashSet, VecDeque},
     fs,
 };
 
@@ -9,7 +10,7 @@ type Graph = HashMap<Node, HashSet<(Node, isize)>>;
 
 #[derive(Hash, Debug, Copy, Clone, PartialEq, Eq)]
 enum Node {
-    Start,
+    Start(u8),
     Key(u8),
     Door(u8),
 }
@@ -43,7 +44,7 @@ fn get_adjacent((i, j): Pos, map: &Map) -> HashSet<(Node, isize)> {
             c if c.is_ascii_uppercase() => {
                 set.insert((Node::Door(*c as u8 - b'A'), steps));
             }
-            _ => ()
+            _ => (),
         }
     }
     set
@@ -51,10 +52,15 @@ fn get_adjacent((i, j): Pos, map: &Map) -> HashSet<(Node, isize)> {
 
 fn map_to_graph(map: Map) -> Graph {
     let mut graph = Graph::new();
+    let mut starts_seen = 0;
 
     for (&pos, &tile) in &map {
         let node = match tile {
-            '@' => Node::Start,
+            '@' => {
+                let start = Node::Start(starts_seen);
+                starts_seen += 1;
+                start
+            }
             c if c.is_ascii_uppercase() => Node::Door(c as u8 - b'A'),
             c if c.is_ascii_lowercase() => Node::Key(c as u8 - b'a'),
             _ => continue,
@@ -65,80 +71,128 @@ fn map_to_graph(map: Map) -> Graph {
     graph
 }
 
-fn part1(map: &Map) -> usize {
-    println!("{:?}", map_to_graph(map.clone()));
-    1
+#[derive(Hash, Debug, Clone, PartialEq, Eq)]
+struct State {
+    bots: Vec<Node>,
+    keys: u32,
 }
 
-// #[derive(Hash, Debug, Clone, PartialEq, Eq)]
-// struct MultiState {
-//     pos: Vec<Pos>,
-//     keys: u32,
-// }
+impl State {
+    fn key_count(&self) -> u32 {
+        let mut keys = self.keys;
+        let mut count = 0;
+        while keys > 0 {
+            count += (keys & 1);
+            keys >>= 1;
+        }
+        count
+    }
+}
 
-// // This is too slow too solve the actual problem in a reasonable timeframe, but it correctly solves the test cases.
-// // TODO: Process the map into a graph, compressing the "Open" tiles into edges with length
+impl Ord for State {
+    fn cmp(&self, other: &State) -> Ordering {
+        self.key_count().cmp(&other.key_count())
+    }
+}
 
-// fn part2(map: &mut HashMap<Pos, Tile>, (i, j): Pos) -> usize {
-//     let mut queue = VecDeque::new();
-//     let mut visited = HashMap::new();
+impl PartialOrd for State {
+    fn partial_cmp(&self, other: &State) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
 
-//     let pos = vec![
-//         (i + 1, j + 1),
-//         (i + 1, j - 1),
-//         (i - 1, j + 1),
-//         (i - 1, j - 1),
-//     ];
+#[derive(Hash, Debug, Clone, PartialEq, Eq)]
+struct CostState {
+    state: State,
+    cost: usize,
+}
 
-//     map.remove(&(i, j)).unwrap();
-//     map.remove(&(i + 1, j)).unwrap();
-//     map.remove(&(i - 1, j)).unwrap();
-//     map.remove(&(i, j + 1)).unwrap();
-//     map.remove(&(i, j - 1)).unwrap();
+impl Ord for CostState {
+    fn cmp(&self, other: &CostState) -> Ordering {
+        other
+            .cost
+            .cmp(&self.cost)
+            .then_with(|| self.state.cmp(&other.state))
+    }
+}
 
-//     queue.push_back(MultiState {
-//         pos: pos.clone(),
-//         keys: 0,
-//     });
-//     visited.insert(
-//         MultiState {
-//             pos: pos.clone(),
-//             keys: 0,
-//         },
-//         0,
-//     );
+impl PartialOrd for CostState {
+    fn partial_cmp(&self, other: &CostState) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
 
-//     loop {
-//         if let Some(state) = queue.pop_front() {
-//             let steps = *visited.get(&state).unwrap();
-//             if state.keys == 0x3FFFFFF {
-//                 // 26 ones for 26 letters
-//                 break steps;
-//             } else {
-//                 for (i, &pos) in state.pos.iter().enumerate() {
-//                     let bot_state = State {
-//                         pos,
-//                         keys: state.keys,
-//                     };
-//                     for next in bot_state.next_states(&map) {
-//                         let mut new_positions = state.pos.clone();
-//                         new_positions[i] = next.pos;
-//                         let next_state = MultiState {
-//                             pos: new_positions,
-//                             keys: next.keys,
-//                         };
-//                         if !visited.contains_key(&next_state) {
-//                             queue.push_back(next_state.clone());
-//                             visited.insert(next_state.clone(), steps + 1);
-//                         }
-//                     }
-//                 }
-//             }
-//         } else {
-//             unreachable!();
-//         }
-//     }
-// }
+fn get_successors(graph: &Graph, state: &State) -> HashSet<(State, isize)> {
+    let mut successors = HashSet::new();
+    for (i, bot) in state.bots.iter().enumerate() {
+        let adjacents = graph.get(bot).unwrap();
+        for (adjacent, len) in adjacents {
+            match adjacent {
+                Node::Door(key) => {
+                    if state.keys & (1 << key) as u32 > 0 {
+                        let mut bots = state.bots.clone();
+                        bots[i] = adjacent.clone();
+                        successors.insert((
+                            State {
+                                keys: state.keys,
+                                bots,
+                            },
+                            *len,
+                        ));
+                    }
+                }
+                Node::Key(key) => {
+                    let keys = state.keys | (1 << key) as u32;
+                    let mut bots = state.bots.clone();
+                    bots[i] = adjacent.clone();
+                    successors.insert((State { keys, bots }, *len));
+                }
+                _ => unreachable!(),
+            }
+        }
+    }
+    successors
+}
+
+fn shortest_path(graph: Graph, states: BinaryHeap<CostState>) -> usize {
+    let mut states = states.clone();
+
+    return std::usize::MAX;
+}
+
+fn part1(map: &Map) -> usize {
+    let graph = map_to_graph(map.clone());
+    let mut states = BinaryHeap::new();
+    let bots = vec![Node::Start(0)];
+    let keys = 0;
+    let state = State { bots, keys };
+    let cost_state = CostState { state, cost: 0 };
+    states.push(cost_state);
+    shortest_path(graph, states)
+}
+
+fn part2(map: &Map) -> usize {
+    let ((i, j), _) = map.iter().find(|(_, &c)| c == '@').unwrap();
+
+    let mut map = map.clone();
+    for di in -1..=1 {
+        for dj in -1..=1 {
+            map.insert((i + di, j + dj), if di == 0 || dj == 0 { '#' } else { '@' });
+        }
+    }
+
+    let graph = map_to_graph(map);
+    let mut states = BinaryHeap::new();
+    for bot in 0..5 {
+        let bots = vec![Node::Start(bot)];
+        let keys = 0;
+        let state = State { bots, keys };
+        let cost_state = CostState { state, cost: 0 };
+        states.push(cost_state);
+    }
+
+    shortest_path(graph, states)
+}
 
 fn main() {
     let content = fs::read_to_string("./input.txt").unwrap();
@@ -154,5 +208,5 @@ fn main() {
     }
 
     println!("Part 1: {}", part1(&map));
-    // println!("Part 2: {}", part2(&mut map, start));
+    println!("Part 2: {}", part2(&mut map));
 }
