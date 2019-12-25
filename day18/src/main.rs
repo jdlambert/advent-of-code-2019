@@ -6,7 +6,7 @@ use std::{
 
 type Pos = (isize, isize);
 type Map = HashMap<Pos, char>;
-type Graph = HashMap<Node, HashSet<(Node, isize)>>;
+type Graph = HashMap<Node, HashSet<(Node, usize)>>;
 
 #[derive(Hash, Debug, Copy, Clone, PartialEq, Eq)]
 enum Node {
@@ -15,7 +15,7 @@ enum Node {
     Door(u8),
 }
 
-fn get_adjacent((i, j): Pos, map: &Map) -> HashSet<(Node, isize)> {
+fn get_adjacent((i, j): Pos, map: &Map) -> HashSet<(Node, usize)> {
     let mut set = HashSet::new();
     let mut seen = HashSet::new();
     let mut frontier = VecDeque::new();
@@ -122,7 +122,7 @@ impl PartialOrd for CostState {
     }
 }
 
-fn get_successors(graph: &Graph, state: &State) -> HashSet<(State, isize)> {
+fn get_successors(graph: &Graph, state: &State, cost: usize) -> HashSet<CostState> {
     let mut successors = HashSet::new();
     for (i, bot) in state.bots.iter().enumerate() {
         let adjacents = graph.get(bot).unwrap();
@@ -132,20 +132,21 @@ fn get_successors(graph: &Graph, state: &State) -> HashSet<(State, isize)> {
                     if state.keys & (1 << key) as u32 > 0 {
                         let mut bots = state.bots.clone();
                         bots[i] = adjacent.clone();
-                        successors.insert((
-                            State {
-                                keys: state.keys,
-                                bots,
-                            },
-                            *len,
-                        ));
+                        let state = State {
+                            keys: state.keys,
+                            bots,
+                        };
+                        let cost = cost + *len;
+                        successors.insert(CostState { state, cost });
                     }
                 }
                 Node::Key(key) => {
                     let keys = state.keys | (1 << key) as u32;
                     let mut bots = state.bots.clone();
                     bots[i] = adjacent.clone();
-                    successors.insert((State { keys, bots }, *len));
+                    let state = State { keys, bots };
+                    let cost = cost + *len;
+                    successors.insert(CostState { state, cost });
                 }
                 _ => unreachable!(),
             }
@@ -156,6 +157,21 @@ fn get_successors(graph: &Graph, state: &State) -> HashSet<(State, isize)> {
 
 fn shortest_path(graph: Graph, states: BinaryHeap<CostState>) -> usize {
     let mut states = states.clone();
+    let mut seen = HashSet::new();
+
+    while let Some(CostState { state, cost }) = states.pop() {
+        if state.key_count() == 26 {
+            return cost;
+        }
+        if seen.contains(&state) {
+            continue;
+        }
+        seen.insert(state.clone());
+
+        for successor in get_successors(&graph, &state, cost) {
+            states.push(successor);
+        }
+    }
 
     return std::usize::MAX;
 }
