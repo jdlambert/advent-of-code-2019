@@ -77,33 +77,6 @@ struct State {
     keys: u32,
 }
 
-impl State {
-    fn key_count(&self) -> u32 {
-        let mut keys = self.keys;
-        let mut count = 0;
-        while keys > 0 {
-            count += keys & 1;
-            keys >>= 1;
-        }
-        count
-    }
-}
-
-impl Ord for State {
-    fn cmp(&self, other: &State) -> Ordering {
-        other
-            .key_count()
-            .cmp(&self.key_count())
-            .then_with(|| self.bots.cmp(&other.bots))
-    }
-}
-
-impl PartialOrd for State {
-    fn partial_cmp(&self, other: &State) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
 #[derive(Hash, Debug, Clone, PartialEq, Eq)]
 struct CostState {
     state: State,
@@ -115,7 +88,6 @@ impl Ord for CostState {
         other
             .cost
             .cmp(&self.cost)
-            .then_with(|| self.state.cmp(&other.state))
     }
 }
 
@@ -163,7 +135,7 @@ fn shortest_path(graph: Graph, states: BinaryHeap<CostState>) -> usize {
     let mut seen = HashSet::new();
 
     while let Some(CostState { state, cost }) = states.pop() {
-        if state.key_count() == 26 {
+        if state.keys.count_ones() == 26 {
             return cost;
         }
         if seen.contains(&state) {
