@@ -28,10 +28,7 @@ impl State {
 
                 match map.get(&pos) {
                     Some(Tile::Door(key)) => {
-                        println!("Door {}", key);
-                        println!("Keys {:b}", self.keys);
                         if self.keys & (1 << key) as u32 > 0 {
-                            println!("Opened the door!");
                             Some(State {
                                 keys: self.keys,
                                 pos,
@@ -55,6 +52,8 @@ impl State {
     }
 }
 
+// This is very slow and could some major refactoring
+
 fn part1(map: &HashMap<Pos, Tile>, pos: Pos) -> usize {
     let mut queue = VecDeque::new();
     let mut visited = HashMap::new();
@@ -71,7 +70,6 @@ fn part1(map: &HashMap<Pos, Tile>, pos: Pos) -> usize {
             } else {
                 for next in state.next_states(&map) {
                     if !visited.contains_key(&next) {
-                        println!("Going to {:?} with keys {:b}", next.pos, next.keys);
                         queue.push_back(next.clone());
                         visited.insert(next.clone(), steps + 1);
                     }
@@ -83,8 +81,74 @@ fn part1(map: &HashMap<Pos, Tile>, pos: Pos) -> usize {
     }
 }
 
-fn part2(data: &Vec<u32>) -> &str {
-    "nothing yet"
+#[derive(Hash, Debug, Clone, PartialEq, Eq)]
+struct MultiState {
+    pos: Vec<Pos>,
+    keys: u32,
+}
+
+// This is too slow too solve the actual problem in a reasonable timeframe, but it correctly solves the test cases.
+// TODO: Process the map into a graph, compressing the "Open" tiles into edges with length
+
+fn part2(map: &mut HashMap<Pos, Tile>, (i, j): Pos) -> usize {
+    let mut queue = VecDeque::new();
+    let mut visited = HashMap::new();
+
+    let pos = vec![
+        (i + 1, j + 1),
+        (i + 1, j - 1),
+        (i - 1, j + 1),
+        (i - 1, j - 1),
+    ];
+
+    map.remove(&(i, j)).unwrap();
+    map.remove(&(i + 1, j)).unwrap();
+    map.remove(&(i - 1, j)).unwrap();
+    map.remove(&(i, j + 1)).unwrap();
+    map.remove(&(i, j - 1)).unwrap();
+
+    queue.push_back(MultiState {
+        pos: pos.clone(),
+        keys: 0,
+    });
+    visited.insert(
+        MultiState {
+            pos: pos.clone(),
+            keys: 0,
+        },
+        0,
+    );
+
+    loop {
+        if let Some(state) = queue.pop_front() {
+            let steps = *visited.get(&state).unwrap();
+            if state.keys == 0x3FFFFFF {
+                // 26 ones for 26 letters
+                break steps;
+            } else {
+                for (i, &pos) in state.pos.iter().enumerate() {
+                    let bot_state = State {
+                        pos,
+                        keys: state.keys,
+                    };
+                    for next in bot_state.next_states(&map) {
+                        let mut new_positions = state.pos.clone();
+                        new_positions[i] = next.pos;
+                        let next_state = MultiState {
+                            pos: new_positions,
+                            keys: next.keys,
+                        };
+                        if !visited.contains_key(&next_state) {
+                            queue.push_back(next_state.clone());
+                            visited.insert(next_state.clone(), steps + 1);
+                        }
+                    }
+                }
+            }
+        } else {
+            unreachable!();
+        }
+    }
 }
 
 fn main() {
@@ -101,7 +165,10 @@ fn main() {
                 '.' => {
                     map.insert((i, j), Tile::Open);
                 }
-                '@' => {start =Some((i, j));  map.insert((i, j), Tile::Open); }
+                '@' => {
+                    start = Some((i, j));
+                    map.insert((i, j), Tile::Open);
+                }
                 'a'..='z' => {
                     map.insert((i, j), Tile::Key(c as u8 - b'a'));
                 }
@@ -115,5 +182,5 @@ fn main() {
     let start = start.unwrap();
 
     println!("Part 1: {}", part1(&map, start));
-    // println!("Part 2: {}", part2(&data));
+    println!("Part 2: {}", part2(&mut map, start));
 }
