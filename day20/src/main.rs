@@ -199,17 +199,25 @@ fn shortest_recursive_path(graph: Graph) -> usize {
         level,
     }) = frontier.pop()
     {
-        if seen.contains(&portal) {
+        if seen.contains(&(portal.clone(), level)) {
             continue;
         }
-        seen.insert(portal.clone());
+        seen.insert((portal.clone(), level));
 
         if portal.name == "ZZ" && level == 0 {
             return cost;
         }
 
         for (adjacent, len) in graph.get(&portal).unwrap() {
-            let new_level = level + if adjacent.outer { -1 } else { 1 };
+            let new_level = if *len == 0 {
+                if adjacent.outer {
+                    level + 1
+                } else {
+                    level - 1
+                }
+            } else {
+                level
+            };
             if new_level < 0 {
                 continue;
             }
