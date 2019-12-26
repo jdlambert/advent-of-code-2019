@@ -5,10 +5,15 @@ use std::{
 };
 
 type Pos = (isize, isize);
+#[derive(Eq, PartialEq, Hash, Clone, Debug)]
+struct Portal {
+    name: String,
+    outer: bool,
+}
 type Map = HashMap<Pos, char>;
-type Graph = HashMap<String, HashSet<(String, usize)>>;
+type Graph = HashMap<Portal, HashSet<(Portal, usize)>>;
 
-fn get_adjacent((i, j): Pos, map: &Map) -> HashSet<(String, usize)> {
+fn get_adjacent((i, j): Pos, map: &Map) -> HashSet<(Portal, usize)> {
     let mut set = HashSet::new();
     let mut seen = HashSet::new();
     let mut frontier = VecDeque::new();
@@ -42,25 +47,30 @@ fn get_adjacent((i, j): Pos, map: &Map) -> HashSet<(String, usize)> {
     set
 }
 
-fn get_portal((i, j): Pos, map: &Map) -> Option<String> {
-    let mut result = String::new();
+fn get_portal((i, j): Pos, map: &Map) -> Option<Portal> {
+    let mut name = String::new();
+    let mut outer = false;
 
     if *map.get(&(i - 1, j)).unwrap_or(&' ') == '.' {
-        result.push(*map.get(&(i, j)).unwrap());
-        result.push(*map.get(&(i + 1, j)).unwrap());
+        name.push(*map.get(&(i, j)).unwrap());
+        name.push(*map.get(&(i + 1, j)).unwrap());
+        outer = map.get(&(i + 2, j)).is_none();
     } else if *map.get(&(i + 1, j)).unwrap_or(&' ') == '.' {
-        result.push(*map.get(&(i - 1, j)).unwrap());
-        result.push(*map.get(&(i, j)).unwrap());
+        name.push(*map.get(&(i - 1, j)).unwrap());
+        name.push(*map.get(&(i, j)).unwrap());
+        outer = map.get(&(i - 2, j)).is_none();
     } else if *map.get(&(i, j - 1)).unwrap_or(&' ') == '.' {
-        result.push(*map.get(&(i, j)).unwrap());
-        result.push(*map.get(&(i, j + 1)).unwrap());
+        name.push(*map.get(&(i, j)).unwrap());
+        name.push(*map.get(&(i, j + 1)).unwrap());
+        outer = map.get(&(i, j + 2)).is_none();
     } else if *map.get(&(i, j + 1)).unwrap_or(&' ') == '.' {
-        result.push(*map.get(&(i, j - 1)).unwrap());
-        result.push(*map.get(&(i, j)).unwrap());
+        name.push(*map.get(&(i, j - 1)).unwrap());
+        name.push(*map.get(&(i, j)).unwrap());
+        outer = map.get(&(i, j - 2)).is_none();
     }
 
-    if result.len() > 0 {
-        Some(result)
+    if name.len() > 0 {
+        Some(Portal { name, outer })
     } else {
         None
     }
@@ -71,10 +81,24 @@ fn map_to_graph(map: Map) -> Graph {
 
     for (&pos, &c) in &map {
         if c.is_ascii_uppercase() {
-            if let Some(node) = get_portal(pos, &map) {
-                let set = graph.entry(node).or_insert(HashSet::new());
+            if let Some(Portal { name, outer }) = get_portal(pos, &map) {
+                let set = graph
+                    .entry(Portal {
+                        name: name.clone(),
+                        outer,
+                    })
+                    .or_insert(HashSet::new());
                 for adjacent in get_adjacent(pos, &map) {
                     set.insert(adjacent);
+                }
+                if name != "AA" && name != "ZZ" {
+                    set.insert((
+                        Portal {
+                            name: name.clone(),
+                            outer: !outer,
+                        },
+                        0,
+                    ));
                 }
             }
         }
@@ -85,7 +109,7 @@ fn map_to_graph(map: Map) -> Graph {
 
 #[derive(Eq, PartialEq)]
 struct State {
-    node: String,
+    portal: Portal,
     cost: usize,
 }
 
@@ -105,23 +129,26 @@ fn shortest_path(graph: Graph) -> usize {
     let mut seen = HashSet::new();
     let mut frontier = BinaryHeap::new();
     frontier.push(State {
-        node: "AA".to_owned(),
+        portal: Portal {
+            name: "AA".to_owned(),
+            outer: true,
+        },
         cost: 0,
     });
 
-    while let Some(State { node, cost }) = frontier.pop() {
-        if seen.contains(&node) {
+    while let Some(State { portal, cost }) = frontier.pop() {
+        if seen.contains(&portal) {
             continue;
         }
-        seen.insert(node.clone());
+        seen.insert(portal.clone());
 
-        if node == "ZZ" {
+        if portal.name == "ZZ" {
             return cost;
         }
 
-        for (adjacent, len) in graph.get(&node).unwrap() {
+        for (adjacent, len) in graph.get(&portal).unwrap() {
             frontier.push(State {
-                node: adjacent.to_owned(),
+                portal: adjacent.to_owned(),
                 cost: cost + len,
             });
         }
@@ -132,7 +159,6 @@ fn shortest_path(graph: Graph) -> usize {
 
 fn part1(map: &Map) -> usize {
     let graph = map_to_graph(map.clone());
-    println!("{:?}", graph);
     shortest_path(graph) - 1
 }
 
