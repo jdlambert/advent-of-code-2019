@@ -162,8 +162,72 @@ fn part1(map: &Map) -> usize {
     shortest_path(graph) - 1
 }
 
+#[derive(Eq, PartialEq)]
+struct RecursiveState {
+    portal: Portal,
+    cost: usize,
+    level: isize,
+}
+
+impl Ord for RecursiveState {
+    fn cmp(&self, other: &RecursiveState) -> Ordering {
+        other.cost.cmp(&self.cost)
+    }
+}
+
+impl PartialOrd for RecursiveState {
+    fn partial_cmp(&self, other: &RecursiveState) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+fn shortest_recursive_path(graph: Graph) -> usize {
+    let mut seen = HashSet::new();
+    let mut frontier = BinaryHeap::new();
+    frontier.push(RecursiveState {
+        portal: Portal {
+            name: "AA".to_owned(),
+            outer: true,
+        },
+        cost: 0,
+        level: 0,
+    });
+
+    while let Some(RecursiveState {
+        portal,
+        cost,
+        level,
+    }) = frontier.pop()
+    {
+        if seen.contains(&portal) {
+            continue;
+        }
+        seen.insert(portal.clone());
+
+        if portal.name == "ZZ" && level == 0 {
+            return cost;
+        }
+
+        for (adjacent, len) in graph.get(&portal).unwrap() {
+            let new_level = level + if adjacent.outer { -1 } else { 1 };
+            if new_level < 0 {
+                continue;
+            }
+
+            frontier.push(RecursiveState {
+                portal: adjacent.to_owned(),
+                cost: cost + len,
+                level: new_level,
+            });
+        }
+    }
+
+    return std::usize::MAX;
+}
+
 fn part2(map: &Map) -> usize {
-    2
+    let graph = map_to_graph(map.clone());
+    shortest_recursive_path(graph) - 1
 }
 
 fn main() {
